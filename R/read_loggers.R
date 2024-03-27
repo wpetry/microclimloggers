@@ -1,6 +1,7 @@
 #' Read HOBO loggers
 #'
 #' @param csv_file path to input csv file
+#' @param dateorder order of year, month, and day components of the date
 #' @param units_out unit system to use in the returned data, defaulting to "as is" but optionally converting to "metric" or "imperial"
 #' @importFrom lubridate mdy_hms
 #' @importFrom stringr str_extract str_replace_all
@@ -13,7 +14,9 @@
 #'
 #' @return a microclim object
 #' @export
-read_hobo_csv <- function(csv_file, units_out = c("as.is", "metric", "imperial")){
+read_hobo_csv <- function(csv_file, dateorder = c("ymd", "mdy", "dmy"), units_out = c("as.is", "metric", "imperial")){
+  # parse dateorder argument, defaulting to "ymd"
+  dateorder <- match.arg(dateorder)
   # parse untis_out argument, defaulting to "as.is"
   units_out <- match.arg(units_out)
   #read first two lines using an encoding that removes BOM characters at start of file if present
@@ -37,7 +40,14 @@ read_hobo_csv <- function(csv_file, units_out = c("as.is", "metric", "imperial")
   #read data
   hobofile <- read.csv(csv_file, skip=2, header=FALSE, stringsAsFactors = FALSE, na.strings = "")
   #parse timestamp
-  hobofile$timestamp <- lubridate::mdy_hms(hobofile[,2], tz=olsontz)
+  if (dateorder == "ymd") {
+    ts <- lubridate::ymd_hms(hobofile[, 2], tz = olsontz)
+  } else if (dateorder == "mdy") {
+    ts <- lubridate::mdy_hms(hobofile[, 2], tz = olsontz)
+  } else if (dateorder == "dmy") {
+    ts <- lubridate::dmy_hms(hobofile[, 2], tz = olsontz)
+  }
+  hobofile$timestamp <- format(ts, '%Y-%m-%d %M:%H:%S')
   #set up output dataframe
   df_out <- data.frame(Timestamp=hobofile$timestamp, Logger.SN = rep(SN, nrow(hobofile)))
   #separate out time stamp
