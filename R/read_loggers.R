@@ -47,7 +47,7 @@ read_hobo_csv <- function(csv_file, dateorder = c("ymd", "mdy", "dmy"), units_ou
   } else if (dateorder == "dmy") {
     ts <- lubridate::dmy_hms(hobofile[, 2], tz = olsontz)
   }
-  hobofile$timestamp <- format(ts, '%Y-%m-%d %M:%H:%S')
+  hobofile$timestamp <- format(ts, '%Y-%m-%d %H:%M:%S')
   #set up output dataframe
   df_out <- data.frame(Timestamp=hobofile$timestamp, Logger.SN = rep(SN, nrow(hobofile)))
   #separate out time stamp
